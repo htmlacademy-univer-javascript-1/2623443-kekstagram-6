@@ -41,3 +41,10 @@ function isMeetingWithinWorkHours(workStart, workEnd, meetingStart, meetingDurat
   const meetingEndMinutes = meetingStartMinutes + meetingDuration;
   return meetingStartMinutes >= workStartMinutes && meetingEndMinutes <= workEndMinutes;
 }
+
+export {
+  checkStringLenght,
+  isPalindrome,
+  extractNumber,
+  isMeetingWithinWorkHours
+};
