@@ -4,7 +4,7 @@ const uploadOverlay = form.querySelector('.img-upload__overlay');
 const uploadCancel = form.querySelector('#upload-cancel');
 const hashtagsInput = form.querySelector('.text__hashtags');
 const descriptionInput = form.querySelector('.text__description');
-const previewImg = form.querySelector('.img-upload__preview img');
+const previewImg = document.querySelector('.img-upload__preview img');
 
 // 1. Правила валидации хэш-тегов
 const validateHashtagCount = (value) => {
@@ -189,4 +189,4 @@ if (document.readyState === 'loading') {
   initForm();
 }
 
-export { closeForm };
+export { closeForm, openForm };
