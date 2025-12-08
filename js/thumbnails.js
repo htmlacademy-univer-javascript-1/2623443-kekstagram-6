@@ -1,4 +1,5 @@
 import { photos } from './main.js';
+import { renderFullscreen } from './fullscreen.js';
 
 const renderThumbnails = () => {
   const picturesContainer = document.querySelector('.pictures');
@@ -23,6 +24,13 @@ const renderThumbnails = () => {
     likesElement.textContent = photo.likes;
 
     thumbnail.dataset.photoId = photo.id;
+
+    // обработчик клика
+    thumbnail.addEventListener('click', (evt) => {
+      evt.preventDefault();
+      const photoId = parseInt(thumbnail.dataset.photoId, 10);
+      renderFullscreen(photoId);
+    });
 
     fragment.appendChild(thumbnailElement);
   });
