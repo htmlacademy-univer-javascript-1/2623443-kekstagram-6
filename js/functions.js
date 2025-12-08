@@ -1,5 +1,5 @@
-function checkStringLenght(line, maxLenght){
-  if (line.length <= maxLenght){
+function checkStringLength(line, maxLength){
+  if (line.length <= maxLength){
     return true;
   }
   return false;
@@ -43,8 +43,9 @@ function isMeetingWithinWorkHours(workStart, workEnd, meetingStart, meetingDurat
 }
 
 export {
-  checkStringLenght,
+  checkStringLength,
   isPalindrome,
   extractNumber,
+  timeToMinutes,
   isMeetingWithinWorkHours
 };
