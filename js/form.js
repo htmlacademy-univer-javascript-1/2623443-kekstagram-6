@@ -1,149 +1,103 @@
+// == Импорты ==
+import { uploadPhoto } from './data/api.js';
+import { resetEditor } from './editor.js';
+
+// == Элементы DOM ==
 const form = document.querySelector('#upload-select-image');
 const uploadFileInput = form.querySelector('#upload-file');
 const uploadOverlay = form.querySelector('.img-upload__overlay');
 const uploadCancel = form.querySelector('#upload-cancel');
 const hashtagsInput = form.querySelector('.text__hashtags');
 const descriptionInput = form.querySelector('.text__description');
-const previewImg = document.querySelector('.img-upload__preview img');
+const previewImg = form.querySelector('.img-upload__preview img');
 
-// 1. Правила валидации хэш-тегов
+// == Валидация хэштегов ==
 const validateHashtagCount = (value) => {
-  const hashtags = value.trim().split(' ').filter((tag) => tag !== '');
+  const hashtags = value.trim().split(' ').filter(tag => tag !== '');
   return hashtags.length <= 5;
 };
 
 const validateHashtagFormat = (value) => {
-  const hashtags = value.trim().split(' ').filter((tag) => tag !== '');
-
-  if (hashtags.length === 0) {
-    return true;
-  }
-
+  const hashtags = value.trim().split(' ').filter(tag => tag !== '');
+  if (hashtags.length === 0) return true;
   const hashtagRegex = /^#[A-Za-zА-Яа-яЁё0-9]{1,19}$/;
-  return hashtags.every((tag) => hashtagRegex.test(tag));
+  return hashtags.every(tag => hashtagRegex.test(tag));
 };
 
 const validateHashtagUniqueness = (value) => {
-  const hashtags = value.toLowerCase().split(' ').filter((tag) => tag !== '');
+  const hashtags = value.toLowerCase().split(' ').filter(tag => tag !== '');
   const uniqueHashtags = new Set(hashtags);
   return uniqueHashtags.size === hashtags.length;
 };
 
-// 2. Правила валидации комментария
+// == Валидация комментария ==
 const validateDescription = (value) => value.length <= 140;
 
-// 3. Создаём Pristine с кастомными классами
+// == Инициализация Pristine ==
 const pristine = new Pristine(form, {
   classTo: 'img-upload__field-wrapper',
   errorTextParent: 'img-upload__field-wrapper',
   errorTextClass: 'img-upload__field-wrapper--error',
 });
 
-// 4. Добавляем валидаторы с разными сообщениями
-pristine.addValidator(
-  hashtagsInput,
-  validateHashtagCount,
-  'Нельзя указать больше пяти хэш-тегов',
-  3,
-  true
-);
+pristine.addValidator(hashtagsInput, validateHashtagCount, 'Нельзя указать больше пяти хэш-тегов', 3, true);
+pristine.addValidator(hashtagsInput, validateHashtagFormat, 'Хэш-тег должен начинаться с # и содержать только буквы и цифры (максимум 20 символов)', 2, true);
+pristine.addValidator(hashtagsInput, validateHashtagUniqueness, 'Один и тот же хэш-тег не может быть использован дважды', 1, true);
+pristine.addValidator(descriptionInput, validateDescription, 'Комментарий не должен превышать 140 символов', 1, true);
 
-pristine.addValidator(
-  hashtagsInput,
-  validateHashtagFormat,
-  'Хэш-тег должен начинаться с # и содержать только буквы и цифры (максимум 20 символов)',
-  2,
-  true
-);
-
-pristine.addValidator(
-  hashtagsInput,
-  validateHashtagUniqueness,
-  'Один и тот же хэш-тег не может быть использован дважды',
-  1,
-  true
-);
-
-pristine.addValidator(
-  descriptionInput,
-  validateDescription,
-  'Комментарий не должен превышать 140 символов',
-  1,
-  true
-);
-
-// Функция показа сообщения об ошибке
-const showErrorMessage = (message) => {
-  const errorMessage = document.createElement('div');
-  errorMessage.textContent = message;
-  errorMessage.classList.add('error-message');
-  errorMessage.style.color = '#ff4e4e';
-  errorMessage.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-  errorMessage.style.padding = '10px 20px';
-  errorMessage.style.borderRadius = '5px';
-  errorMessage.style.marginBottom = '10px';
-  errorMessage.style.textAlign = 'center';
-  errorMessage.style.fontWeight = 'bold';
-
-  const wrapper = document.querySelector('.img-upload__wrapper');
-  if (wrapper) {
-    wrapper.insertBefore(errorMessage, wrapper.firstChild);
-
-    setTimeout(() => {
-      if (errorMessage.parentNode) {
-        errorMessage.parentNode.removeChild(errorMessage);
-      }
-    }, 3000);
-  }
-};
-
-// 5. Открытие формы
+// == Открытие формы ==
 const openForm = () => {
   uploadOverlay.classList.remove('hidden');
   document.body.classList.add('modal-open');
-
   pristine.reset();
 };
 
-// 6. Обработка выбора файла
-const onFileInputChange = () => {
-  const file = uploadFileInput.files[0];
-
-  if (file) {
-    // Проверяем, что это изображение
-    if (!file.type.startsWith('image/')) {
-      showErrorMessage('Пожалуйста, выберите файл изображения');
-      uploadFileInput.value = '';
-      return;
-    }
-
-    openForm();
-  }
-};
-
-uploadFileInput.addEventListener('change', onFileInputChange);
-
-// 7. Закрытие формы с сбросом
-const closeForm = () => {
+// == Закрытие и сброс формы ==
+export const closeForm = () => {
   uploadOverlay.classList.add('hidden');
   document.body.classList.remove('modal-open');
 
   form.reset();
-
   pristine.reset();
 
+  // Возвращаем изображение-затычку
   previewImg.src = 'img/upload-default-image.jpg';
+
+  // Очищаем input файла (обязательно!)
+  uploadFileInput.value = '';
+
+  // Сбрасываем редактор (масштаб, эффекты)
+  resetEditor();
 };
 
+// == Выбор файла ==
+const onFileInputChange = () => {
+  const file = uploadFileInput.files[0];
+
+  if (!file) return;
+
+  if (!file.type.startsWith('image/')) {
+    // Показ ошибки можно реализовать, но по ТЗ не обязательно — просто сбросим
+    uploadFileInput.value = '';
+    return;
+  }
+
+  // Подставляем выбранное изображение в превью
+  previewImg.src = URL.createObjectURL(file);
+  openForm();
+};
+
+uploadFileInput.addEventListener('change', onFileInputChange);
+
+// == Закрытие по кнопке "Отмена" ==
 uploadCancel.addEventListener('click', (evt) => {
   evt.preventDefault();
   closeForm();
 });
 
-// 8. Закрытие по Esc
+// == Закрытие по Esc ==
 const onDocumentKeydown = (evt) => {
   if (evt.key === 'Escape' && !uploadOverlay.classList.contains('hidden')) {
-    // Не закрываем если фокус в полях ввода
     if (document.activeElement === hashtagsInput || document.activeElement === descriptionInput) {
       return;
     }
@@ -154,18 +108,64 @@ const onDocumentKeydown = (evt) => {
 
 document.addEventListener('keydown', onDocumentKeydown);
 
-// 9. Обработка отправки формы
-form.addEventListener('submit', (evt) => {
+// == Отправка формы ==
+form.addEventListener('submit', async (evt) => {
   evt.preventDefault();
 
-  const isValid = pristine.validate();
+  if (!pristine.validate()) {
+    return;
+  }
 
-  if (isValid) {
-    // Форма валидна - можно отправлять
+  const submitButton = form.querySelector('.img-upload__submit');
+  submitButton.disabled = true;
+
+  const formData = new FormData(form);
+
+  try {
+    await uploadPhoto(formData);
+    closeForm();
+
+    // === Показ модального окна УСПЕХА ===
+    const successTemplate = document.querySelector('#success').content;
+    const successElement = successTemplate.cloneNode(true).children[0];
+    document.body.appendChild(successElement);
+
+    const closeSuccess = () => {
+      successElement.remove();
+      document.removeEventListener('keydown', onEscSuccess);
+      document.removeEventListener('click', onOutsideClickSuccess);
+    };
+
+    const onEscSuccess = (e) => { if (e.key === 'Escape') closeSuccess(); };
+    const onOutsideClickSuccess = (e) => { if (e.target === successElement) closeSuccess(); };
+
+    successElement.querySelector('.success__button').addEventListener('click', closeSuccess);
+    document.addEventListener('keydown', onEscSuccess);
+    document.addEventListener('click', onOutsideClickSuccess);
+  } catch {
+    // === Показ модального окна ОШИБКИ ===
+    const errorTemplate = document.querySelector('#error').content;
+    const errorElement = errorTemplate.cloneNode(true).children[0];
+    document.body.appendChild(errorElement);
+
+    const closeError = () => {
+      errorElement.remove();
+      document.removeEventListener('keydown', onEscError);
+      document.removeEventListener('click', onOutsideClickError);
+    };
+
+    const onEscError = (e) => { if (e.key === 'Escape') closeError(); };
+    const onOutsideClickError = (e) => { if (e.target === errorElement) closeError(); };
+
+    errorElement.querySelector('.error__button').addEventListener('click', closeError);
+    document.addEventListener('keydown', onEscError);
+    document.addEventListener('click', onOutsideClickError);
+  } finally {
+    submitButton.disabled = false;
   }
 });
 
-// 10. Блокировка Esc в полях ввода
+// == Блокировка Esc в полях ввода ==
 const stopEscPropagation = (evt) => {
   if (evt.key === 'Escape') {
     evt.stopPropagation();
@@ -174,19 +174,3 @@ const stopEscPropagation = (evt) => {
 
 hashtagsInput.addEventListener('keydown', stopEscPropagation);
 descriptionInput.addEventListener('keydown', stopEscPropagation);
-
-// 11. Инициализация при загрузке DOM
-const initForm = () => {
-  if (!form || !uploadFileInput || !uploadOverlay || !uploadCancel) {
-    return;
-  }
-};
-
-// Запускаем инициализацию
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initForm);
-} else {
-  initForm();
-}
-
-export { closeForm, openForm };
