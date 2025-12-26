@@ -1,5 +1,4 @@
-// editor.js - модуль для редактирования изображения
-import { closeForm as originalCloseForm } from './form.js';
+// модуль для редактирования изображения
 
 // Константы
 const SCALE_STEP = 25;
@@ -86,45 +85,43 @@ const showSlider = () => {
 };
 
 const updateSlider = (effect) => {
+  // Уничтожаем старый слайдер, если существует
   if (effectLevelSlider.noUiSlider) {
-    effectLevelSlider.noUiSlider.updateOptions({
-      range: {
-        min: EFFECTS[effect].min,
-        max: EFFECTS[effect].max
-      },
-      start: EFFECTS[effect].max,
-      step: EFFECTS[effect].step
-    });
-  } else {
-    noUiSlider.create(effectLevelSlider, {
-      range: {
-        min: EFFECTS[effect].min,
-        max: EFFECTS[effect].max
-      },
-      start: EFFECTS[effect].max,
-      step: EFFECTS[effect].step,
-      connect: 'lower'
-    });
-
-    effectLevelSlider.noUiSlider.on('update', (values, handle) => {
-      const value = values[handle];
-      effectLevelValue.value = value;
-      updateEffect(effect, value);
-    });
+    effectLevelSlider.noUiSlider.destroy();
   }
+
+  // Создаём новый слайдер
+  noUiSlider.create(effectLevelSlider, {
+    range: {
+      min: EFFECTS[effect].min,
+      max: EFFECTS[effect].max
+    },
+    start: EFFECTS[effect].max,
+    step: EFFECTS[effect].step,
+    connect: 'lower'
+  });
+
+  // Назначаем новый обработчик
+  effectLevelSlider.noUiSlider.on('update', (values, handle) => {
+    const value = values[handle];
+    effectLevelValue.value = value;
+    updateEffect(effect, value);
+  });
 };
 
 const onEffectChange = (evt) => {
-  if (evt.target.type === 'radio') {
-    const newEffect = evt.target.value;
+  if (evt.target.type !== 'radio') {
+    return;
+  }
 
-    if (newEffect === 'none') {
-      hideSlider();
-      updateEffect('none', 0);
-    } else {
-      showSlider();
-      updateSlider(newEffect);
-    }
+  const newEffect = evt.target.value;
+
+  if (newEffect === 'none') {
+    hideSlider();
+    updateEffect('none', 0);
+  } else {
+    showSlider();
+    updateSlider(newEffect);
   }
 };
 

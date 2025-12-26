@@ -1,8 +1,8 @@
-// Импорты
+// == Импорты ==
 import { uploadPhoto } from './data/api.js';
 import { resetEditor } from './editor.js';
 
-// Элементы DOM
+// == Элементы DOM ==
 const form = document.querySelector('#upload-select-image');
 const uploadFileInput = form.querySelector('#upload-file');
 const uploadOverlay = form.querySelector('.img-upload__overlay');
@@ -11,7 +11,7 @@ const hashtagsInput = form.querySelector('.text__hashtags');
 const descriptionInput = form.querySelector('.text__description');
 const previewImg = form.querySelector('.img-upload__preview img');
 
-// Валидация хэштегов
+// == Валидация хэштегов ==
 const validateHashtagCount = (value) => {
   const hashtags = value.trim().split(' ').filter(tag => tag !== '');
   return hashtags.length <= 5;
@@ -30,10 +30,10 @@ const validateHashtagUniqueness = (value) => {
   return uniqueHashtags.size === hashtags.length;
 };
 
-// Валидация комментария
+// == Валидация комментария ==
 const validateDescription = (value) => value.length <= 140;
 
-// Инициализация Pristine
+// == Инициализация Pristine ==
 const pristine = new Pristine(form, {
   classTo: 'img-upload__field-wrapper',
   errorTextParent: 'img-upload__field-wrapper',
@@ -45,14 +45,14 @@ pristine.addValidator(hashtagsInput, validateHashtagFormat, 'Хэш-тег до�
 pristine.addValidator(hashtagsInput, validateHashtagUniqueness, 'Один и тот же хэш-тег не может быть использован дважды', 1, true);
 pristine.addValidator(descriptionInput, validateDescription, 'Комментарий не должен превышать 140 символов', 1, true);
 
-// Открытие формы
+// == Открытие формы ==
 const openForm = () => {
   uploadOverlay.classList.remove('hidden');
   document.body.classList.add('modal-open');
   pristine.reset();
 };
 
-// Закрытие и сброс формы
+// == Закрытие и сброс формы ==
 export const closeForm = () => {
   uploadOverlay.classList.add('hidden');
   document.body.classList.remove('modal-open');
@@ -63,20 +63,21 @@ export const closeForm = () => {
   // Возвращаем изображение-затычку
   previewImg.src = 'img/upload-default-image.jpg';
 
-  // Очищаем input файла
+  // Очищаем input файла (обязательно!)
   uploadFileInput.value = '';
 
   // Сбрасываем редактор (масштаб, эффекты)
   resetEditor();
 };
 
-// Выбор файла
+// == Выбор файла ==
 const onFileInputChange = () => {
   const file = uploadFileInput.files[0];
 
   if (!file) return;
 
   if (!file.type.startsWith('image/')) {
+    // Показ ошибки можно реализовать, но по ТЗ не обязательно — просто сбросим
     uploadFileInput.value = '';
     return;
   }
@@ -88,13 +89,13 @@ const onFileInputChange = () => {
 
 uploadFileInput.addEventListener('change', onFileInputChange);
 
-// Закрытие по кнопке "Отмена"
+// == Закрытие по кнопке "Отмена" ==
 uploadCancel.addEventListener('click', (evt) => {
   evt.preventDefault();
   closeForm();
 });
 
-// Закрытие по Esc
+// == Закрытие по Esc ==
 const onDocumentKeydown = (evt) => {
   if (evt.key === 'Escape' && !uploadOverlay.classList.contains('hidden')) {
     if (document.activeElement === hashtagsInput || document.activeElement === descriptionInput) {
@@ -107,7 +108,7 @@ const onDocumentKeydown = (evt) => {
 
 document.addEventListener('keydown', onDocumentKeydown);
 
-// Отправка формы
+// == Отправка формы ==
 form.addEventListener('submit', async (evt) => {
   evt.preventDefault();
 
@@ -124,7 +125,7 @@ form.addEventListener('submit', async (evt) => {
     await uploadPhoto(formData);
     closeForm();
 
-    // Показ модального окна успеха
+    // === Показ модального окна УСПЕХА ===
     const successTemplate = document.querySelector('#success').content;
     const successElement = successTemplate.cloneNode(true).children[0];
     document.body.appendChild(successElement);
@@ -142,7 +143,7 @@ form.addEventListener('submit', async (evt) => {
     document.addEventListener('keydown', onEscSuccess);
     document.addEventListener('click', onOutsideClickSuccess);
   } catch {
-    // Показ модального окна ошибки
+    // === Показ модального окна ОШИБКИ ===
     const errorTemplate = document.querySelector('#error').content;
     const errorElement = errorTemplate.cloneNode(true).children[0];
     document.body.appendChild(errorElement);
@@ -164,7 +165,7 @@ form.addEventListener('submit', async (evt) => {
   }
 });
 
-// Блокировка Esc в полях ввода
+// == Блокировка Esc в полях ввода ==
 const stopEscPropagation = (evt) => {
   if (evt.key === 'Escape') {
     evt.stopPropagation();
