@@ -16,7 +16,7 @@ export const renderThumbnails = (photosToRender) => {
   const titleElement = picturesContainer.querySelector('.pictures__title');
 
   const existingThumbnails = picturesContainer.querySelectorAll('.picture');
-  existingThumbnails.forEach(thumb => thumb.remove());
+  existingThumbnails.forEach((thumb) => thumb.remove());
 
   const fragment = document.createDocumentFragment();
 
@@ -30,7 +30,7 @@ export const renderThumbnails = (photosToRender) => {
     image.src = photo.url;
     image.onerror = () => {
       image.src = 'img/upload-default-image.jpg';
-};
+    };
     image.alt = photo.description || 'Фотография';
     commentsElement.textContent = photo.comments.length;
     likesElement.textContent = photo.likes;
