@@ -22,20 +22,18 @@ const getFilteredPhotos = (photos, filter) => {
   }
 };
 
-// Создаём обновлённую функцию рендеринга
-const createUpdater = (photos, filter) => {
-  return () => {
-    const filtered = getFilteredPhotos(photos, filter);
-    renderThumbnails(filtered);
-    setActiveFilter(filter);
-  };
-};
-
 // Управление активным фильтром
 const setActiveFilter = (filterId) => {
   const buttons = document.querySelectorAll('.img-filters__button');
-  buttons.forEach(btn => btn.classList.remove('img-filters__button--active'));
+  buttons.forEach((btn) => btn.classList.remove('img-filters__button--active'));
   document.querySelector(`#${filterId}`).classList.add('img-filters__button--active');
+};
+
+// Создаём основную функцию рендеринга
+const createUpdater = (photos, filter) => () => {
+  const filtered = getFilteredPhotos(photos, filter);
+  renderThumbnails(filtered);
+  setActiveFilter(filter);
 };
 
 // Экспортируем функцию инициализации

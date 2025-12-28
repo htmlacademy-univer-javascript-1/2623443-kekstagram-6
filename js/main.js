@@ -4,7 +4,6 @@ import { initEditor } from './editor.js';
 import { initFilters } from './filter.js';
 import './form.js';
 
-
 export let photos = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
