@@ -40,7 +40,7 @@ export const renderThumbnails = (photosToRender) => {
     thumbnail.addEventListener('click', (evt) => {
       evt.preventDefault();
       const photoId = parseInt(thumbnail.dataset.photoId, 10);
-      renderFullscreen(photoId);
+      renderFullscreen(photoId, photosToRender);
     });
 
     fragment.appendChild(thumbnailElement);

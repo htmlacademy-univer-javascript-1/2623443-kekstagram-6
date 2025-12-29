@@ -64,11 +64,12 @@ const EFFECTS = {
   }
 };
 
+let currentEffect = 'none';
+
 // 1. Функции для эффектов
 const updateEffect = (effect, value) => {
-  imagePreview.style.filter = 'none';
-
   if (effect === 'none') {
+    imagePreview.style.filter = 'none';
     return;
   }
 
@@ -77,20 +78,24 @@ const updateEffect = (effect, value) => {
 };
 
 const hideSlider = () => {
-  effectLevel.classList.add('hidden');
+  if (effectLevel) {
+    effectLevel.classList.add('hidden');
+  }
 };
 
 const showSlider = () => {
-  effectLevel.classList.remove('hidden');
+  if (effectLevel) {
+    effectLevel.classList.remove('hidden');
+  }
 };
 
 const updateSlider = (effect) => {
-  // Уничтожаем старый слайдер, если существует
+  showSlider();
+
   if (effectLevelSlider.noUiSlider) {
     effectLevelSlider.noUiSlider.destroy();
   }
 
-  // Создаём новый слайдер
   noUiSlider.create(effectLevelSlider, {
     range: {
       min: EFFECTS[effect].min,
@@ -98,15 +103,44 @@ const updateSlider = (effect) => {
     },
     start: EFFECTS[effect].max,
     step: EFFECTS[effect].step,
-    connect: 'lower'
+    connect: 'lower',
+    behaviour: 'snap',
+    format: {
+      to: function(value) {
+        return value;
+      },
+      from: function(value) {
+        return parseFloat(value);
+      }
+    }
   });
 
-  // Назначаем новый обработчик
-  effectLevelSlider.noUiSlider.on('update', (values, handle) => {
-    const value = values[handle];
-    effectLevelValue.value = value;
-    updateEffect(effect, value);
+  effectLevelSlider.noUiSlider.on('update', (values, sliderHandle) => {
+    const value = values[sliderHandle];
+
+    let formattedValue;
+    if (effect === 'chrome' || effect === 'sepia') {
+      formattedValue = parseFloat(value.toFixed(1));
+    } else if (effect === 'marvin') {
+      formattedValue = Math.round(value);
+    } else if (effect === 'phobos' || effect === 'heat') {
+      formattedValue = parseFloat(value.toFixed(1));
+    } else {
+      formattedValue = value;
+    }
+
+    effectLevelValue.value = formattedValue;
+    updateEffect(effect, formattedValue);
   });
+
+  const initialValue = EFFECTS[effect].max;
+  effectLevelValue.value = initialValue;
+  updateEffect(effect, initialValue);
+
+  const handle = effectLevelSlider.querySelector('.noUi-handle');
+  if (handle) {
+    handle.setAttribute('tabindex', '0');
+  }
 };
 
 const onEffectChange = (evt) => {
@@ -115,15 +149,16 @@ const onEffectChange = (evt) => {
   }
 
   const newEffect = evt.target.value;
+  currentEffect = newEffect;
 
   if (newEffect === 'none') {
     hideSlider();
     updateEffect('none', 0);
   } else {
-    showSlider();
     updateSlider(newEffect);
   }
 };
+
 
 // 2. Функции для масштаба
 const updateScale = (value) => {
@@ -154,6 +189,7 @@ const resetEditor = () => {
   const noneEffect = document.querySelector('#effect-none');
   if (noneEffect) {
     noneEffect.checked = true;
+    currentEffect = 'none';
   }
 
   hideSlider();
@@ -161,6 +197,10 @@ const resetEditor = () => {
 
   if (effectLevelSlider.noUiSlider) {
     effectLevelSlider.noUiSlider.destroy();
+  }
+
+  if (effectLevelValue) {
+    effectLevelValue.value = '';
   }
 };
 
@@ -178,11 +218,35 @@ const initEditor = () => {
   // Инициализация эффектов
   if (effectsList) {
     effectsList.addEventListener('change', onEffectChange);
+
+    const initialEffectRadio = document.querySelector('input[name="effect"]:checked');
+    const initialEffect = initialEffectRadio ? initialEffectRadio.value : 'none';
+    currentEffect = initialEffect;
+
+    if (initialEffect !== 'none') {
+      updateSlider(initialEffect);
+    } else {
+      hideSlider();
+    }
   }
 
-  hideSlider();
+  // Обработчики для превью эффектов
+  const effectPreviews = document.querySelectorAll('.effects__preview');
+  effectPreviews.forEach((preview) => {
+    preview.addEventListener('click', () => {
+      const input = preview.closest('.effects__item').querySelector('input[type="radio"]');
+      if (input) {
+        input.click();
+      }
+    });
+  });
 
-  // Переопределяем closeForm для сброса редактора
+  // Скрываем слайдер по умолчанию
+  if (currentEffect === 'none') {
+    hideSlider();
+  }
+
+  // Обработчик закрытия формы
   const closeButton = document.querySelector('#upload-cancel');
   if (closeButton) {
     closeButton.addEventListener('click', () => {
@@ -191,5 +255,20 @@ const initEditor = () => {
   }
 };
 
-// Экспорт
 export { initEditor, resetEditor };
+
+export const destroyEditor = () => {
+  if (scaleSmaller) {
+    scaleSmaller.removeEventListener('click', onScaleSmallerClick);
+  }
+  if (scaleBigger) {
+    scaleBigger.removeEventListener('click', onScaleBiggerClick);
+  }
+  if (effectsList) {
+    effectsList.removeEventListener('change', onEffectChange);
+  }
+
+  if (effectLevelSlider && effectLevelSlider.noUiSlider) {
+    effectLevelSlider.noUiSlider.destroy();
+  }
+};

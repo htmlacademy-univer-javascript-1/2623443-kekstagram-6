@@ -28,21 +28,22 @@ const setActiveFilter = (filterId) => {
   buttons.forEach((btn) => btn.classList.remove('img-filters__button--active'));
   document.querySelector(`#${filterId}`).classList.add('img-filters__button--active');
 };
+const createRenderUpdater = (photos, filter) => () =>
+  renderThumbnails(getFilteredPhotos(photos, filter));
 
-// Создаём основную функцию рендеринга
-const createUpdater = (photos, filter) => () => {
-  const filtered = getFilteredPhotos(photos, filter);
-  renderThumbnails(filtered);
-  setActiveFilter(filter);
+// Обработчик клика по фильтру
+const createFilterHandler = (photos, filter) => {
+  const debouncedRender = debounce(createRenderUpdater(photos, filter), 500);
+
+  return () => {
+    setActiveFilter(filter);
+    debouncedRender();
+  };
 };
 
-// Экспортируем функцию инициализации
+// Инициализация
 export const initFilters = (photos) => {
-  const debouncedDefault = debounce(createUpdater(photos, FILTER_DEFAULT), 500);
-  const debouncedRandom = debounce(createUpdater(photos, FILTER_RANDOM), 500);
-  const debouncedDiscussed = debounce(createUpdater(photos, FILTER_DISCUSSED), 500);
-
-  document.querySelector(`#${FILTER_DEFAULT}`).addEventListener('click', debouncedDefault);
-  document.querySelector(`#${FILTER_RANDOM}`).addEventListener('click', debouncedRandom);
-  document.querySelector(`#${FILTER_DISCUSSED}`).addEventListener('click', debouncedDiscussed);
+  document.querySelector(`#${FILTER_DEFAULT}`).addEventListener('click', createFilterHandler(photos, FILTER_DEFAULT));
+  document.querySelector(`#${FILTER_RANDOM}`).addEventListener('click', createFilterHandler(photos, FILTER_RANDOM));
+  document.querySelector(`#${FILTER_DISCUSSED}`).addEventListener('click', createFilterHandler(photos, FILTER_DISCUSSED));
 };

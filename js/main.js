@@ -6,6 +6,51 @@ import './form.js';
 
 export let photos = [];
 
+const showDataError = () => {
+  const existingError = document.querySelector('.data-error');
+  if (existingError) {
+    existingError.remove();
+  }
+
+  const errorTemplate = document.querySelector('#error');
+  if (errorTemplate) {
+    const errorElement = errorTemplate.content.cloneNode(true).children[0];
+
+    errorElement.classList.add('data-error');
+
+    // Меняем текст
+    const errorTitle = errorElement.querySelector('.error__title');
+    if (errorTitle) {
+      errorTitle.textContent = 'Ошибка загрузки данных';
+    }
+
+    const errorButton = errorElement.querySelector('.error__button');
+    if (errorButton) {
+      errorButton.textContent = 'Попробовать снова';
+      errorButton.addEventListener('click', () => {
+        errorElement.remove();
+        location.reload();
+      });
+    }
+
+    document.body.appendChild(errorElement);
+
+    // Закрытие по клику вне блока
+    errorElement.addEventListener('click', (evt) => {
+      if (evt.target === errorElement) {
+        errorElement.remove();
+      }
+    });
+
+    // Закрытие по Esc
+    document.addEventListener('keydown', (evt) => {
+      if (evt.key === 'Escape' && document.querySelector('.data-error')) {
+        document.querySelector('.data-error').remove();
+      }
+    });
+  }
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     photos = await loadPhotos();
@@ -14,30 +59,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelector('.img-filters').classList.remove('img-filters--inactive');
     initFilters(photos);
   } catch (error) {
-    const errorTemplate = document.querySelector('#error').content.cloneNode(true);
-    const errorElement = errorTemplate.querySelector('.error');
-    document.body.appendChild(errorElement);
-
-    const closeError = () => {
-      errorElement.remove();
-      document.removeEventListener('keydown', onEsc);
-      document.removeEventListener('click', onOutsideClick);
-    };
-
-    const onEsc = (evt) => {
-      if (evt.key === 'Escape') {
-        closeError();
-      }
-    };
-
-    const onOutsideClick = (evt) => {
-      if (evt.target === errorElement) {
-        closeError();
-      }
-    };
-
-    errorElement.querySelector('.error__button').addEventListener('click', closeError);
-    document.addEventListener('keydown', onEsc);
-    document.addEventListener('click', onOutsideClick);
+    showDataError();
   }
 });
