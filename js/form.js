@@ -183,7 +183,7 @@ const onFileInputChange = () => {
   openForm();
 };
 
-// == Закрытие по кнопке "Отмена" ==
+// Закрытие по кнопке "Отмена"
 uploadCancel.addEventListener('click', (evt) => {
   evt.preventDefault();
   closeForm();
