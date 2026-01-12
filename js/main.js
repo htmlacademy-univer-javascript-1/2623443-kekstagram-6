@@ -2,7 +2,7 @@ import { loadPhotos } from './data/api.js';
 import { renderThumbnails } from './thumbnails.js';
 import { initEditor } from './editor.js';
 import { initFilters } from './filter.js';
-import './form.js';
+import { initForm } from './form.js';
 
 export let photos = [];
 
@@ -52,6 +52,7 @@ const showDataError = () => {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
+  initForm();
   try {
     photos = await loadPhotos();
     renderThumbnails(photos);
